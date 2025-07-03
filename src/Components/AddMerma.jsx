@@ -123,7 +123,7 @@ const AddMerma = () => {
                                     no_piezas: values.piezas,
                                     cargo: values.cargo,
                                     disposicion: values.disposicion,
-                                    recuperado_id: (!values.disposicion ? '' : values.recuperado),
+                                    recuperado_id: (!values.disposicion ? null : values.recuperado),
                                     linea_id: userData?.linea_id,
                                     turno_id: userData?.turno_id,
                                     usuario_id: userData?.id_usuario
