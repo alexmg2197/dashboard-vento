@@ -5,7 +5,7 @@ import { supabase } from '../../../supabaseClient'
 import LogoS from '../../assets/logo-vento.png'
 import Swal from "sweetalert2";
 
-const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
+const DefectoModal = ({modal, defecto, isEdit, onRefresh={onRefresh}}) =>{
 
     const [loading, setLoading] = useState(false);
 
@@ -23,7 +23,7 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                         {/* Header */}
                         <div className=" bg-twoo flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600 border-gray-200">
                             <h3 className="text-lg font-semibold text-black">
-                                {isEdit ? 'Editar Moto' : 'Crear Moto'}
+                                {isEdit ? 'Editar Defecto' : 'Crear Defecto'}
                             </h3>
                             <button
                                 onClick={handleOpen}
@@ -49,13 +49,13 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                         </div>
                         <Formik
                             initialValues={{
-                                idMoto : isEdit ? moto.id_moto : '',
-                                modelo: isEdit ? moto.modelo : '',
+                                idDefecto : isEdit ? defecto.id_defecto : '',
+                                defecto: isEdit ? defecto.defecto : '',
                             }}
                             validate={values =>{
                                 const errors={};
-                                    if(!values.modelo){
-                                        errors.modelo = 'Modelo es requerido'
+                                    if(!values.defecto){
+                                        errors.defecto = 'Defecto es requerido'
                                     }
                                 return errors;
                             }}
@@ -64,14 +64,14 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                     setLoading(true)
                                     try {
                                         const {data, error } = await supabase
-                                        .from('Motos')
+                                        .from('Defectos')
                                         .insert([
                                             {
-                                                modelo:values.modelo
+                                                defecto:values.defecto
                                             },
                                         ]);
                                         Swal.fire({
-                                            title: "Moto  creada con exito!",
+                                            title: "Defecto creado con exito!",
                                             icon: "success",
                                             draggable: true
                                         }).then(async (result) => {
@@ -96,14 +96,14 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                     setLoading(true);
                                     try {
                                         const {error} = await supabase
-                                        .from('Motos')
+                                        .from('Defectos')
                                         .update({
-                                            modelo: values.modelo
+                                            defecto: values.defecto
                                         })
-                                        .eq("id_moto", values.idMoto)
+                                        .eq("id_defecto", values.idDefecto)
 
                                         Swal.fire({
-                                            title: "Moto actualizada con exito!",
+                                            title: "Defecto actualizado con exito!",
                                             icon: "success",
                                             draggable: true
                                         }).then(async (result) => {
@@ -137,27 +137,27 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                         <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                                             <div>
                                                 <div className="relative w-full group">
-                                                    <span className={`absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b  ${errors.modelo && touched.modelo ? 'from-red-700 to-red-400' : 'from-blue-500 to-cyan-500'} opacity-70 transition-all duration-300 group-focus-within:opacity-100`} />
-                                                    <input type="text" id="modelo" value={values.modelo} onChange={handleChange} placeholder=" "
+                                                    <span className={`absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b  ${errors.defecto && touched.defecto ? 'from-red-700 to-red-400' : 'from-blue-500 to-cyan-500'} opacity-70 transition-all duration-300 group-focus-within:opacity-100`} />
+                                                    <input type="text" id="defecto" value={values.defecto} onChange={handleChange} placeholder=" "
                                                         className={`peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-gray-800 bg-white border rounded-lg shadow-md focus:outline-none transition-all duration-300 placeholder-transparent
-                                                        ${(values.modelo !== '' ? 'border-blue-500 ring-2 ring-indigo-300' : 'border-gray-200 focus:ring-2 focus:ring-indigo-300 focus:border-transparent') +
-                                                            (errors.modelo && touched.modelo ? ' border-red-500 ring-2 ring-red-300' : '') 
+                                                        ${(values.defecto !== '' ? 'border-blue-500 ring-2 ring-indigo-300' : 'border-gray-200 focus:ring-2 focus:ring-indigo-300 focus:border-transparent') +
+                                                            (errors.defecto && touched.defecto ? ' border-red-500 ring-2 ring-red-300' : '') 
                                                         } 
                                                         `}
                                                     />
-                                                    <label htmlFor="modelo"
+                                                    <label htmlFor="defecto"
                                                         className={`absolute left-6 transition-all duration-200 ease-in-out cursor-text
-                                                        ${(values.modelo !== ''
+                                                        ${(values.defecto !== ''
                                                             ? 'top-1 text-sm text-blue-500 font-semibold'
-                                                            : 'top-3.5 text-base text-gray-500') + (errors.modelo && touched.modelo ? ' text-red-500' : '') 
+                                                            : 'top-3.5 text-base text-gray-500') + (errors.defecto && touched.defecto ? ' text-red-500' : '') 
                                                         }
                                                         peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500 peer-focus:font-semibold
                                                         `}
                                                     >
-                                                        Modelo
+                                                        Defecto
                                                     </label>
                                                 </div>
-                                                    {errors.modelo && touched.modelo && <div className="text-red-500">{errors.modelo}</div>}
+                                                    {errors.defecto && touched.defecto && <div className="text-red-500">{errors.defecto}</div>}
                                             </div>
                                         </div>
                                         
@@ -205,4 +205,4 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
         </>
     )
 }
-export default MotoModal
+export default DefectoModal

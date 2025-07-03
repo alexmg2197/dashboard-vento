@@ -1,23 +1,52 @@
-import { useState, useMemo } from "react";
-import {
-  Box, Table, TableHead, TableRow, Typography, TableCell, Pagination, TableBody, TableContainer, Paper
-} from "@mui/material";
+import { useState, useMemo, useEffect } from "react";
+import {Box, Table, TableHead, TableRow, Typography, TableCell, Pagination, TableBody, TableContainer, Paper} from "@mui/material";
+import Swal from "sweetalert2";
+import { supabase } from "../../../supabaseClient";
+import LogoS from '../../assets/logo-vento.png'
+import RecuperadoModal from "../Modales/RecuperadoModal";
 
-const data = [
-    {nombre:"Hojalateria"},
-    {nombre:"Herreria"},
-    {nombre:"Proveedor"},
-    {nombre:"Mecanico"},
-    {nombre:"Kit de emergencia"},
-];
+const RecuperadoTable = ({ search, reloadFlag, onRefresh }) =>{
 
-const RecuperadoTable = ({search}) =>{
-
+    const [recuperado, setRecuperado] = useState([]);
+    const [recuperados, setRecuperados] = useState([]);
+    const [ismodal, setIsModal] = useState(false);
+    const [modalEdit, setModalEdit] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const rowsPerPage = 5;
+
+    useEffect(()=>{
+        const fetchRecuperados = async () =>{
+            setLoading(true)
+            try {
+                const {data, error} = await supabase
+                .from('Recuperado')
+                .select(`*`)
+
+                if(error){
+                    Swal.fire({
+                        title: `Error: ${error}`,
+                        icon: "error",
+                        draggable: true
+                    });
+                } else {
+                    setRecuperados(data)
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: `Error: ${error}`,
+                    icon: "error",
+                    draggable: true
+                });
+            } finally{
+                setLoading(false)
+            }
+        }
+        fetchRecuperados()
+    },[reloadFlag]);
     
-    const filtered = data.filter(item =>
-        item.nombre.toLowerCase().includes(search.toLowerCase()) 
+    const filtered = recuperados.filter(item =>
+        item.recuperado.toLowerCase().includes(search.toLowerCase()) 
     );
     
     const paginatedData = useMemo(() => {
@@ -25,10 +54,56 @@ const RecuperadoTable = ({search}) =>{
         return filtered.slice(start, start + rowsPerPage);
     }, [filtered, page]);
 
+    const newRecuperado = () =>{
+        setRecuperado(null);
+        setIsModal(false)
+        setModalEdit(true);
+    }
+
+    const editRecuperado = (data) => {
+        console.log(data)
+        setRecuperado(data);
+        setIsModal(true)
+        setModalEdit(true);
+    }
+
+    const deleteRecuperado = (data) => {
+        Swal.fire({
+            title: "¿Estas seguro que deseas eliminar?",
+            text: "Esta decisión no se puede revertir!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Si, Eliminalo!"
+            }).then(async (result) => {
+            if (result.isConfirmed) {
+                const { error } = await supabase
+                .from('Recuperado')
+                .delete()
+                .eq('id_recuperado',data.id_recuperado)
+                if(error){
+                    Swal.fire({
+                        title:`Error: ${error}`
+                    })
+                }
+                Swal.fire({
+                title: "Eliminado!",
+                text: `${data.recuperado} ha sido eliminado`,
+                icon: "success"
+                });
+                onRefresh()
+            }
+        });
+    }
+
     return(
         <>
+        {
+            modalEdit && <RecuperadoModal modal={setModalEdit} recuperado={recuperado} isEdit={ismodal} onRefresh={onRefresh}/>
+        }
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <button className="group flex items-center justify-start w-11 h-11 bg-green-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-40 hover:rounded-lg active:translate-x-1 active:translate-y-1">
+                <button onClick={() => { newRecuperado() }} className="group flex items-center justify-start w-11 h-11 bg-green-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-40 hover:rounded-lg active:translate-x-1 active:translate-y-1">
                     <div className="flex items-center justify-center w-full transition-all duration-300 group-hover:justify-start group-hover:px-3 text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="currentColor" d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2z"/></svg>
                     </div>
@@ -50,20 +125,24 @@ const RecuperadoTable = ({search}) =>{
                     {paginatedData.map((item, i) => (
                         <TableRow key={i}>
                         <TableCell>{i +1}</TableCell>
-                        <TableCell>{item.nombre}</TableCell>
+                        <TableCell>{item.recuperado}</TableCell>
                         <TableCell>
-                             <div className="flex items-center justify-center gap-x-2">
-                                <button className="group relative flex items-center justify-start w-14 h-6 bg-orange-400 rounded-full cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
-                                    <div className="ml-3 text-white text-xs font-semibold">
-                                        Editar
+                            <div className="flex items-center justify-center gap-x-2">
+                                <button onClick={ () => { editRecuperado(item) }} className="group relative flex items-center justify-start w-fit px-3 py-1 bg-orange-400 rounded-full cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                                    <div className="flex items-center space-x-1 text-white text-xs font-semibold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M15.748 2.947a2 2 0 0 1 2.828 0l2.475 2.475a2 2 0 0 1 0 2.829L9.158 20.144l-6.38 1.076l1.077-6.38zm-.229 3.057l2.475 2.475l1.643-1.643l-2.475-2.474zm1.06 3.89l-2.474-2.475l-8.384 8.384l-.503 2.977l2.977-.502z"/>
+                                        </svg>
+                                        <span>Editar</span>
                                     </div>
                                 </button> 
-                                <button className="group relative flex items-center justify-start w-15 h-6 bg-red-600 rounded-full cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
-                                    <div className="ml-2 text-white text-xs font-semibold">
-                                        Eliminar
+                                <button onClick={() => { deleteRecuperado(item) }} className="group relative flex items-center justify-start w-fit px-3 py-1 bg-red-600 rounded-full cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                                    <div className="flex items-center space-x-1 text-white text-xs font-semibold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2h4a1 1 0 1 1 0 2h-1.069l-.867 12.142A2 2 0 0 1 17.069 22H6.93a2 2 0 0 1-1.995-1.858L4.07 8H3a1 1 0 0 1 0-2h4zm2 2h6V4H9zM6.074 8l.857 12H17.07l.857-12zM10 10a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1"/></svg>
+                                        <span>Eliminar</span>
                                     </div>
                                 </button> 
-                             </div>
+                            </div>
                         </TableCell>
                         </TableRow>
                     ))}
@@ -86,8 +165,29 @@ const RecuperadoTable = ({search}) =>{
                     page={page}
                     onChange={(_, value) => setPage(value)}
                     color="primary"
+                    siblingCount={2}   // Cuántas páginas mostrar a los lados de la actual
+                    boundaryCount={2}  // Cuántas páginas mostrar al inicio y al final
+                    showFirstButton    // (opcional) muestra el botón "Primera página"
+                    showLastButton 
                 />
             </Box>
+            {loading && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="flex flex-col gap-4 w-full items-center justify-center">
+                        {/* Contenedor giratorio con posición relativa */}
+                        <div className="relative w-28 h-28">
+                            {/* Círculo giratorio */}
+                            <div className="w-full h-full border-8 border-gray-300 border-t-blue-900 rounded-full animate-spin" />
+                            {/* Imagen centrada y fija */}
+                            <img
+                                src={LogoS}
+                                alt="Logo"
+                                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-23"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }

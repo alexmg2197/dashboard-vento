@@ -1,11 +1,15 @@
-import { useState, useMemo  } from "react";
+import { useState, useMemo, useEffect  } from "react";
 import {
   Box, Tabs, Tab, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, TextField, Pagination, Typography
 } from '@mui/material';
+import { supabase } from '../../supabaseClient'
+import LogoS from '../assets/logo-vento.png'
 
 const VerMerma = () => {
 
+    const [mermaData, setMermaData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedTab, setSelectedTab] = useState(0);
     const [selectedSubtab, setSelectedSubtab] = useState(0);
     const [search, setSearch] = useState('');
@@ -14,108 +18,77 @@ const VerMerma = () => {
 
     const tabs = ["Todos", "Turno", "Componente", "Linea"];
 
-    const data = [
-        {
-            fecha: "11/06/2025",
-            turno: "Primero",
-            linea: "Linea 1",
-            modelo: "Crossmax",
-            componente: "Llanta",
-            defecto: "Ponchada",
-            piezas:"3",
-            cargo:"Origen",
-            disposicion: "Scrap",
-            recuperado:"N/A"
-        },
-        {
-            fecha: "11/06/2025",
-            turno: "Segundo",
-            linea: "Linea 2",
-            modelo:"Modelo 2",
-            componente: "Llanta",
-            defecto: "Ponchada",
-            piezas:"3",
-            cargo:"Origen",
-            disposicion: "Recuperado",
-            recuperado:"Herreria"
-        },
-        {
-            fecha: "11/06/2025",
-            turno: "Primero",
-            linea: "Linea 3",
-            modelo:'rapid',
-            componente: "Llanta",
-            defecto: "Ponchada",
-            piezas:"3",
-            cargo:"Produccion",
-            disposicion: "Scrap",
-            recuperado:"N/A"
-        },
-        {
-            fecha: "11/06/2025",
-            turno: "Primero",
-            linea: "Linea 4",
-            modelo:"modelo4",
-            componente: "Llanta",
-            defecto: "Ponchada",
-            piezas:"3",
-            cargo:"Origen",
-            disposicion: "Recuperado",
-            recuperado:"Mecanico"
-        },
-        {
-            fecha: "12/06/2025",
-            turno: "Primero",
-            linea: "Linea 4",
-            modelo:"modelo4",
-            componente: "Discos",
-            defecto: "Ponchada",
-            piezas:"3",
-            cargo:"Origen",
-            disposicion: "Recuperado",
-            recuperado:"Mecanico"
-        },
-    ];
+
+    useEffect(() => {
+        const fetchMerma = async () => {
+            setLoading(true);
+            const { data, error } = await supabase.from('Merma').select('*, C_Linea(linea), C_Turno(Turno), Motos(modelo), Componentes(componente), Subcomponentes(subcomponente),Defectos(defecto), Recuperado(recuperado), Usuarios(nombre)');
+            if (error) {
+                console.error("Error al cargar Merma:", error.message);
+                setMermaData([]);
+            } else {
+                setMermaData(data);
+            }
+            setLoading(false);
+        };
+        fetchMerma();
+    }, []);
 
     const getSubtabOptions = () => {
         if (tabs[selectedTab] === "Turno") {
-            return ["Primero", "Segundo"];
+            return [...new Set(mermaData.map(d => d.C_Turno.Turno))];
         } else if (tabs[selectedTab] === "Componente") {
-            return [...new Set(data.map(d => d.componente))];
+            return [...new Set(mermaData.map(d => d.Componentes.componente))];
         }else if (tabs[selectedTab] === "Linea"){
-            return [...new Set(data.map(d => d.linea))];
+            return [...new Set(mermaData.map(d => d.C_Linea.linea))];
         }
         return [];
     };
 
-    const subtabOptions = getSubtabOptions();
-
-    const handleChangeTab = (event, newValue) => {
-        setSelectedTab(newValue);
-        setSearch('');
-        setPage(1);
-    };
-
-    const filteredData = useMemo(() => {
-        let result = [...data];
-
+    const subtabOptions = useMemo(() => {
+        if (!mermaData || mermaData.length === 0) return [];
         if (tabs[selectedTab] === "Turno") {
-            result = result.filter(d => d.turno === subtabOptions[selectedSubtab]);
+            return [...new Set(mermaData.map(d => d.C_Turno.Turno))];
         } else if (tabs[selectedTab] === "Componente") {
-            result = result.filter(d => d.componente === subtabOptions[selectedSubtab]);
+            return [...new Set(mermaData.map(d => d.Componentes.componente))];
         } else if (tabs[selectedTab] === "Linea") {
-            result = result.filter(d => d.linea === subtabOptions[selectedSubtab]);
+            return [...new Set(mermaData.map(d => d.C_Linea.linea))];
         }
+        return [];
+    }, [mermaData, selectedTab]);
 
-        return result.filter((d) =>
-            d.fecha.toLowerCase().includes(search.toLowerCase())
-        );
-    }, [selectedTab, selectedSubtab, search]);
+const filteredData = useMemo(() => {
+    if (!mermaData || mermaData.length === 0) return [];
+
+    let result = [...mermaData];
+
+    if (tabs[selectedTab] === "Turno" && subtabOptions.length > 0) {
+        result = result.filter(d => d.C_Turno.Turno === subtabOptions[selectedSubtab]);
+    } else if (tabs[selectedTab] === "Componente" && subtabOptions.length > 0) {
+        result = result.filter(d => d.Componentes.componente === subtabOptions[selectedSubtab]);
+    } else if (tabs[selectedTab] === "Linea" && subtabOptions.length > 0) {
+        result = result.filter(d => d.C_Linea.linea === subtabOptions[selectedSubtab]);
+    }
+
+    return result.filter((d) =>
+        d.fecha_merma.toLowerCase().includes(search.toLowerCase())
+    );
+}, [selectedTab, selectedSubtab, search, mermaData, subtabOptions]);
 
     const paginatedData = useMemo(() => {
         const start = (page - 1) * rowsPerPage;
         return filteredData.slice(start, start + rowsPerPage);
     }, [filteredData, page]);
+
+    const formatFecha = (fechaISO) => {
+        if (!fechaISO) return '';
+        const fecha = new Date(fechaISO);
+        return fecha.toLocaleDateString('es-MX', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
     return(
         <Box sx={{ width: '100%', mt: 1, px: 2 }}>
@@ -172,16 +145,16 @@ const VerMerma = () => {
                     <TableBody>
                     {paginatedData.map((item, idx) => (
                         <TableRow key={idx}>
-                        <TableCell>{item.fecha}</TableCell>
-                        <TableCell>{item.turno}</TableCell>
-                        <TableCell>{item.linea}</TableCell>
-                        <TableCell>{item.modelo}</TableCell>
-                        <TableCell>{item.componente}</TableCell>
-                        <TableCell>{item.defecto}</TableCell>
-                        <TableCell>{item.piezas}</TableCell>
+                        <TableCell>{formatFecha(item.fecha_merma)}</TableCell>
+                        <TableCell>{item.C_Turno.Turno}</TableCell>
+                        <TableCell>{item.C_Linea.linea}</TableCell>
+                        <TableCell>{item.Motos.modelo}</TableCell>
+                        <TableCell>{item.Componentes.componente}</TableCell>
+                        <TableCell>{item.Defectos.defecto}</TableCell>
+                        <TableCell>{item.no_piezas}</TableCell>
                         <TableCell>{item.cargo}</TableCell>
                         <TableCell>{item.disposicion}</TableCell>
-                        <TableCell>{item.recuperado}</TableCell>
+                        <TableCell>{((item.Recuperado.recuperado === '' || item.Recuperado.recuperado === null || item.Recuperado.recuperado === undefined) ? 'N/A' : item.Recuperado.recuperado)}</TableCell>
                         </TableRow>
                     ))}
                     {paginatedData.length === 0 && (
@@ -204,9 +177,31 @@ const VerMerma = () => {
                     page={page}
                     onChange={(_, value) => setPage(value)}
                     color="primary"
+                    siblingCount={2}   // Cuántas páginas mostrar a los lados de la actual
+                    boundaryCount={2}  // Cuántas páginas mostrar al inicio y al final
+                    showFirstButton    // (opcional) muestra el botón "Primera página"
+                    showLastButton 
                 />
                 </Box>
             </Paper>
+            {loading && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                <div className="flex flex-col gap-4 w-full items-center justify-center">
+                                    {/* Contenedor giratorio con posición relativa */}
+                                    <div className="relative w-28 h-28">
+                                        {/* Círculo giratorio */}
+                                        <div className="w-full h-full border-8 border-gray-300 border-t-blue-900 rounded-full animate-spin" />
+                                        
+                                        {/* Imagen centrada y fija */}
+                                        <img
+                                            src={LogoS}
+                                            alt="Logo"
+                                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-23"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
         </Box>
     )
 }

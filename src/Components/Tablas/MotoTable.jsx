@@ -1,13 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import MotoModal from "../Modales/MotoModal";
-import {
-  Box, Table, TableHead, TableRow, Typography, TableCell, Pagination, TableBody, TableContainer, Paper
+import {Box, Table, TableHead, TableRow, Typography, TableCell, Pagination, TableBody, TableContainer, Paper
 } from "@mui/material";
 import Swal from "sweetalert2";
 import { supabase } from "../../../supabaseClient";
 import LogoS from '../../assets/logo-vento.png'
 
-const MotoTable = ({search}) =>{
+const MotoTable = ({search, reloadFlag, onRefresh}) =>{
 
     const [moto, setMoto] = useState([]);
     const [motos, setMotos] = useState([]);
@@ -26,18 +25,26 @@ const MotoTable = ({search}) =>{
                 .select(`*`)
 
                 if(error){
-                    setError(error.message)
+                    Swal.fire({
+                        title: `Error: ${error}`,
+                        icon: "error",
+                        draggable: true
+                    });
                 } else {
                     setMotos(data)
                 }
             } catch (error) {
-               setError(error.message)
+                Swal.fire({
+                    title: `Error: ${error}`,
+                    icon: "error",
+                    draggable: true
+                });
             } finally{
                 setLoading(false)
             }
         }
         fetchMotos()
-    },[]);
+    },[reloadFlag]);
     
     
     const filtered = motos.filter(item =>
@@ -71,13 +78,23 @@ const MotoTable = ({search}) =>{
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: "Si, Eliminalo!"
-            }).then((result) => {
+            }).then(async (result) => {
             if (result.isConfirmed) {
+                const { error } = await supabase
+                .from('Motos')
+                .delete()
+                .eq('id_moto',data.id_moto)
+                if(error){
+                    Swal.fire({
+                        title:`Error: ${error}`
+                    })
+                }
                 Swal.fire({
                 title: "Eliminado!",
                 text: `La moto ${data.modelo} ha sido eliminada`,
                 icon: "success"
                 });
+                onRefresh()
             }
         });
     }
@@ -85,7 +102,7 @@ const MotoTable = ({search}) =>{
     return(
         <>
             {
-                modalEdit && <MotoModal modal={setModalEdit} moto={moto} isEdit={ismodal}/>
+                modalEdit && <MotoModal modal={setModalEdit} moto={moto} isEdit={ismodal} onRefresh={onRefresh}/>
             }
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <button onClick={()=>{newMoto()}} className="group flex items-center justify-start w-11 h-11 bg-green-600 rounded-full cursor-pointer relative overflow-hidden transition-all duration-200 shadow-lg hover:w-32 hover:rounded-lg active:translate-x-1 active:translate-y-1">
@@ -121,14 +138,13 @@ const MotoTable = ({search}) =>{
                                         <span>Editar</span>
                                     </div>
                                 </button>
-
                                 <button onClick={() => {deleteMoto(item)}} className="group relative flex items-center justify-start w-fit px-3 py-1 bg-red-600 rounded-full cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
-                                     <div className="flex items-center space-x-1 text-white text-xs font-semibold">
+                                    <div className="flex items-center space-x-1 text-white text-xs font-semibold">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2h4a1 1 0 1 1 0 2h-1.069l-.867 12.142A2 2 0 0 1 17.069 22H6.93a2 2 0 0 1-1.995-1.858L4.07 8H3a1 1 0 0 1 0-2h4zm2 2h6V4H9zM6.074 8l.857 12H17.07l.857-12zM10 10a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1"/></svg>
                                         <span>Eliminar</span>
                                     </div>
                                 </button> 
-                             </div>
+                            </div>
                         </TableCell>
                         </TableRow>
                     ))}
@@ -151,6 +167,10 @@ const MotoTable = ({search}) =>{
                     page={page}
                     onChange={(_, value) => setPage(value)}
                     color="primary"
+                    siblingCount={2}   // Cuántas páginas mostrar a los lados de la actual
+                    boundaryCount={2}  // Cuántas páginas mostrar al inicio y al final
+                    showFirstButton    // (opcional) muestra el botón "Primera página"
+                    showLastButton     // (opcional) muestra el botón "Última página"
                 />
             </Box>
             {loading && (

@@ -5,9 +5,40 @@ import { supabase } from '../../../supabaseClient'
 import LogoS from '../../assets/logo-vento.png'
 import Swal from "sweetalert2";
 
-const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
+const SubcomponenteModal = ({modal, subcomponente, isEdit, onRefresh={onRefresh}}) =>{
 
     const [loading, setLoading] = useState(false);
+    const [componente, setComponente] = useState([]);
+
+    useEffect(() => {
+        const fetchComponentes = async () =>{
+            setLoading(true)
+            try {
+                const {data, error} = await supabase
+                .from('Componentes')
+                .select(`*`)
+
+                if(error){
+                    Swal.fire({
+                        title: `Error: ${error}`,
+                        icon: "error",
+                        draggable: true
+                    });
+                } else {
+                    setComponente(data)
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: `Error: ${error}`,
+                    icon: "error",
+                    draggable: true
+                });
+            } finally{
+                setLoading(false)
+            }
+        }
+        fetchComponentes()
+    },[])
 
     const handleOpen = () =>{
         modal(false)
@@ -23,7 +54,7 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                         {/* Header */}
                         <div className=" bg-twoo flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600 border-gray-200">
                             <h3 className="text-lg font-semibold text-black">
-                                {isEdit ? 'Editar Moto' : 'Crear Moto'}
+                                {isEdit ? 'Editar Subcomponente' : 'Crear Subcomponente'}
                             </h3>
                             <button
                                 onClick={handleOpen}
@@ -49,13 +80,17 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                         </div>
                         <Formik
                             initialValues={{
-                                idMoto : isEdit ? moto.id_moto : '',
-                                modelo: isEdit ? moto.modelo : '',
+                                idSubcomponente : isEdit ? subcomponente.id_subcomponente : '',
+                                subcomponente: isEdit ? subcomponente.subcomponente : '',
+                                idComponente: isEdit ? subcomponente.componente_id : ''
                             }}
                             validate={values =>{
                                 const errors={};
-                                    if(!values.modelo){
-                                        errors.modelo = 'Modelo es requerido'
+                                    if(!values.subcomponente){
+                                        errors.subcomponente = 'Subcomponente es requerido'
+                                    } else if(!values.idComponente)
+                                    {
+                                        errors.idComponente = 'Componente es requerido'
                                     }
                                 return errors;
                             }}
@@ -64,14 +99,15 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                     setLoading(true)
                                     try {
                                         const {data, error } = await supabase
-                                        .from('Motos')
+                                        .from('Subcomponentes')
                                         .insert([
                                             {
-                                                modelo:values.modelo
+                                                subcomponente:values.subcomponente,
+                                                componente_id:values.idComponente
                                             },
                                         ]);
                                         Swal.fire({
-                                            title: "Moto  creada con exito!",
+                                            title: "Subcomponente creado con exito!",
                                             icon: "success",
                                             draggable: true
                                         }).then(async (result) => {
@@ -84,7 +120,7 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                             } else if (result.isDenied) {
                                                 Swal.fire("Changes are not saved", "", "info");
                                             }       
-                                        });
+                                        })
                                     } catch (error) {
                                         Swal.fire({
                                             title: `Error: ${error}`,
@@ -96,14 +132,15 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                     setLoading(true);
                                     try {
                                         const {error} = await supabase
-                                        .from('Motos')
+                                        .from('Subcomponentes')
                                         .update({
-                                            modelo: values.modelo
+                                            subcomponente: values.subcomponente,
+                                            componente_id:values.idComponente
                                         })
-                                        .eq("id_moto", values.idMoto)
+                                        .eq("id_subcomponente", values.idSubcomponente)
 
                                         Swal.fire({
-                                            title: "Moto actualizada con exito!",
+                                            title: "Subcomponente actualizado con exito!",
                                             icon: "success",
                                             draggable: true
                                         }).then(async (result) => {
@@ -116,10 +153,8 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                             } else if (result.isDenied) {
                                                 Swal.fire("Changes are not saved", "", "info");
                                             }       
-                                        });;
+                                        });
                                     } catch (error) {
-                                        setSubmitting(false);
-                                                setLoading(false);
                                         Swal.fire({
                                             title: `Error: ${error}`,
                                             icon: "success",
@@ -137,27 +172,78 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                         <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                                             <div>
                                                 <div className="relative w-full group">
-                                                    <span className={`absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b  ${errors.modelo && touched.modelo ? 'from-red-700 to-red-400' : 'from-blue-500 to-cyan-500'} opacity-70 transition-all duration-300 group-focus-within:opacity-100`} />
-                                                    <input type="text" id="modelo" value={values.modelo} onChange={handleChange} placeholder=" "
+                                                    <span
+                                                        className={`absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b ${
+                                                        errors.idComponente && touched.idComponente ? 'from-red-700 to-red-400' : 'from-blue-500 to-cyan-500'
+                                                        } opacity-70 transition-all duration-300 group-focus-within:opacity-100`}
+                                                    />
+                                                    <select
+                                                        id="idComponente"
+                                                        name="idComponente"
+                                                        value={values.idComponente}
+                                                        onChange={handleChange}
+                                                        className={`peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-gray-800 bg-white border rounded-lg shadow-md appearance-none focus:outline-none transition-all duration-300
+                                                        ${
+                                                            values.idComponente !== ''
+                                                            ? 'border-blue-500 ring-2 ring-indigo-300'
+                                                            : 'border-gray-200 focus:ring-2 focus:ring-indigo-300 focus:border-transparent'
+                                                        }
+                                                        ${errors.idComponente && touched.idComponente ? ' border-red-500 ring-2 ring-red-300' : ''}
+                                                        `}
+                                                    >
+                                                        <option value="" disabled></option>
+                                                        {
+                                                        componente.map((comp) => {
+                                                            return(
+                                                                <option key={comp.id_componente} value={comp.id_componente}>{comp.componente}</option>
+                                                            )
+                                                        }
+                                                        )
+                                                    }
+                                                    </select>
+
+                                                    <label
+                                                        htmlFor="idComponente"
+                                                        className={`absolute left-6 transition-all duration-200 ease-in-out cursor-text
+                                                        ${
+                                                            values.idComponente !== ''
+                                                            ? 'top-1 text-sm text-blue-500 font-semibold'
+                                                            : 'top-3.5 text-base text-gray-500'
+                                                        }
+                                                        ${errors.idComponente && touched.idComponente ? ' text-red-500' : ''}
+                                                        peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500 peer-focus:font-semibold
+                                                        `}
+                                                    >
+                                                        Componente
+                                                    </label>
+                                                </div>
+                                                {errors.idComponente && touched.idComponente && (
+                                                <div className="text-red-500 mt-1 text-sm">{errors.idComponente}</div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="relative w-full group">
+                                                    <span className={`absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b  ${errors.subcomponente && touched.subcomponente ? 'from-red-700 to-red-400' : 'from-blue-500 to-cyan-500'} opacity-70 transition-all duration-300 group-focus-within:opacity-100`} />
+                                                    <input type="text" id="subcomponente" value={values.subcomponente} onChange={handleChange} placeholder=" "
                                                         className={`peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-gray-800 bg-white border rounded-lg shadow-md focus:outline-none transition-all duration-300 placeholder-transparent
-                                                        ${(values.modelo !== '' ? 'border-blue-500 ring-2 ring-indigo-300' : 'border-gray-200 focus:ring-2 focus:ring-indigo-300 focus:border-transparent') +
-                                                            (errors.modelo && touched.modelo ? ' border-red-500 ring-2 ring-red-300' : '') 
+                                                        ${(values.subcomponente !== '' ? 'border-blue-500 ring-2 ring-indigo-300' : 'border-gray-200 focus:ring-2 focus:ring-indigo-300 focus:border-transparent') +
+                                                            (errors.subcomponente && touched.subcomponente ? ' border-red-500 ring-2 ring-red-300' : '') 
                                                         } 
                                                         `}
                                                     />
-                                                    <label htmlFor="modelo"
+                                                    <label htmlFor="subcomponente"
                                                         className={`absolute left-6 transition-all duration-200 ease-in-out cursor-text
-                                                        ${(values.modelo !== ''
+                                                        ${(values.subcomponente !== ''
                                                             ? 'top-1 text-sm text-blue-500 font-semibold'
-                                                            : 'top-3.5 text-base text-gray-500') + (errors.modelo && touched.modelo ? ' text-red-500' : '') 
+                                                            : 'top-3.5 text-base text-gray-500') + (errors.subcomponente && touched.subcomponente ? ' text-red-500' : '') 
                                                         }
                                                         peer-focus:top-1 peer-focus:text-sm peer-focus:text-blue-500 peer-focus:font-semibold
                                                         `}
                                                     >
-                                                        Modelo
+                                                        Subcomponente
                                                     </label>
                                                 </div>
-                                                    {errors.modelo && touched.modelo && <div className="text-red-500">{errors.modelo}</div>}
+                                                    {errors.subcomponente && touched.subcomponente && <div className="text-red-500">{errors.subcomponente}</div>}
                                             </div>
                                         </div>
                                         
@@ -169,7 +255,7 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
                                                     <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                                                     <span className="relative z-10 block px-6 py-3 rounded-xl bg-blue-600">
                                                         <div className="relative z-10 flex items-center space-x-2">
-                                                        <span className="transition-all duration-500 group-hover:translate-x-1">Agregar</span>
+                                                        <span className="transition-all duration-500 group-hover:translate-x-1">{isEdit ? 'Editar' : 'Agregar'}</span>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="currentColor" d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2z"/></svg>
                                                         </div>
                                                     </span>
@@ -205,4 +291,4 @@ const MotoModal = ({modal, moto, isEdit, onRefresh={onRefresh}}) =>{
         </>
     )
 }
-export default MotoModal
+export default SubcomponenteModal

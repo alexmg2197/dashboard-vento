@@ -3,8 +3,9 @@ import { Formik } from "formik";
 import { useState, useEffect } from "react";
 import { supabase } from '../../../supabaseClient'
 import LogoS from '../../assets/logo-vento.png'
+import Swal from "sweetalert2";
 
-const ComponenteModal = ({modal, componente, isEdit}) =>{
+const ComponenteModal = ({modal, componente, isEdit, onRefresh={onRefresh}}) =>{
 
     const [loading, setLoading] = useState(false);
 
@@ -48,8 +49,8 @@ const ComponenteModal = ({modal, componente, isEdit}) =>{
                         </div>
                         <Formik
                             initialValues={{
-                                idComponente : isEdit ? moto.id_componente : '',
-                                componente: isEdit ? moto.componente : '',
+                                idComponente : isEdit ? componente.id_componente : '',
+                                componente: isEdit ? componente.componente : '',
                             }}
                             validate={values =>{
                                 const errors={};
@@ -70,22 +71,27 @@ const ComponenteModal = ({modal, componente, isEdit}) =>{
                                             },
                                         ]);
                                         Swal.fire({
-                                            title: "Componente creada con exito!",
+                                            title: "Componente creadO con exito!",
                                             icon: "success",
                                             draggable: true
-                                        });
+                                        }).then(async (result) => {
+                                            if (result.isConfirmed) {
+                                                setSubmitting(false);
+                                                setLoading(false);
+                                                await onRefresh()
+                                                Swal.fire("Saved!", "", "success");
+                                                handleOpen()
+                                            } else if (result.isDenied) {
+                                                Swal.fire("Changes are not saved", "", "info");
+                                            }       
+                                        })
                                     } catch (error) {
                                         Swal.fire({
                                             title: `Error: ${error}`,
                                             icon: "success",
                                             draggable: true
                                         });
-                                    } finally {
-                                        setSubmitting(false);
-                                        setLoading(false);
-                                        window.location.reload();
-                                        handleOpen();
-                                    }
+                                    } 
                                 } else {
                                     setLoading(true);
                                     try {
@@ -100,6 +106,16 @@ const ComponenteModal = ({modal, componente, isEdit}) =>{
                                             title: "Componente actualizado con exito!",
                                             icon: "success",
                                             draggable: true
+                                        }).then(async (result) => {
+                                            if (result.isConfirmed) {
+                                                setSubmitting(false);
+                                                setLoading(false);
+                                                await onRefresh()
+                                                Swal.fire("Saved!", "", "success");
+                                                handleOpen()
+                                            } else if (result.isDenied) {
+                                                Swal.fire("Changes are not saved", "", "info");
+                                            }       
                                         });
                                     } catch (error) {
                                         Swal.fire({
@@ -107,11 +123,6 @@ const ComponenteModal = ({modal, componente, isEdit}) =>{
                                             icon: "success",
                                             draggable: true
                                         });
-                                    } finally {
-                                        setSubmitting(false);
-                                        setLoading(false);
-                                        window.location.reload();
-                                        handleOpen();
                                     }
                                 }
                             }}>

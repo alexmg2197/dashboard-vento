@@ -188,6 +188,10 @@ const UserTable = ({search}) => {
                     page={page}
                     onChange={(_, value) => setPage(value)}
                     color="primary"
+                    siblingCount={2}   // Cuántas páginas mostrar a los lados de la actual
+                    boundaryCount={2}  // Cuántas páginas mostrar al inicio y al final
+                    showFirstButton    // (opcional) muestra el botón "Primera página"
+                    showLastButton 
                 />
             </Box>
             {loading && (
