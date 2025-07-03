@@ -129,6 +129,13 @@ const AddMerma = () => {
                                     usuario_id: userData?.id_usuario
                                     },
                             ]);
+                            if(error){
+                                Swal.fire({
+                                    title: `Error ${error}`,
+                                    icon: "error",
+                                    draggable: true
+                                })
+                            }
                             Swal.fire({
                             title: "Merma generada correctamente",
                             icon: "success",
