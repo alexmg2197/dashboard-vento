@@ -63,14 +63,12 @@ const SubcomponentesTable = ({ search, componenteSeleccionado, reloadFlag, onRef
     }
     
     const editSubcomponente = (data) => {
-        console.log(data)
         setSubcomponente(data);
         setIsModal(true)
         setModalEdit(true);
     }
 
     const deleteSubcomponente = (data) => {
-        console.log(data)
         Swal.fire({
             title: "¿Estas seguro que deseas eliminar?",
             text: "Esta decisión no se puede revertir!",

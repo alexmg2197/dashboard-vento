@@ -74,7 +74,6 @@ const UserTable = ({search}) => {
     const deleteUser = (data) => {
         setLoading(true)
         const auth_user_id = data.auth_user_id
-        console.log(auth_user_id)
         Swal.fire({
             title: "¿Estas seguro que deseas eliminar?",
             text: "Esta decisión no se puede revertir!",

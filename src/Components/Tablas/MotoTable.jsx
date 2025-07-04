@@ -63,7 +63,6 @@ const MotoTable = ({search, reloadFlag, onRefresh}) =>{
     }
 
     const editMoto = (data) => {
-            console.log(data)
             setMoto(data);
             setIsModal(true)
             setModalEdit(true);

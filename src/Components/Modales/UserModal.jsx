@@ -130,7 +130,7 @@ const UserModal = ({modal, usuario, isEdit}) =>{
                                         email: values.correo,
                                         password: values.pass,
                                         });
-    
+
                                         if (error) throw error;
     
                                         // 2. Insertar en tabla Usuarios
@@ -185,8 +185,6 @@ const UserModal = ({modal, usuario, isEdit}) =>{
                                             .eq("id_usuario", values.id) // Asegúrate que auth_user_id esté bien guardado
 
                                         if (updateError) throw updateError
-
-                                        console.log("Usuario actualizado correctamente")
                                         // Puedes mostrar un mensaje, redirigir, cerrar modal, etc.
                                     } catch (error) {
                                         console.error("Error al actualizar usuario:", error.message || error)

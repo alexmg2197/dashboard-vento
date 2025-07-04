@@ -21,8 +21,7 @@ const Catalogos = () =>{
 
     const { userData } = useUser() //Se usa para ver el usuario logueado
     const navigate = useNavigate();
-    console.log(userData)
-
+    
     useEffect(() => {
         if (userData && userData.C_Rol.rol !== 'Admin') {
             navigate('/no-autorizado'); // Ruta a la que quieres redirigir si no es admin

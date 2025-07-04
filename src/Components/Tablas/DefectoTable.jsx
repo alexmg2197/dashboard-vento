@@ -61,7 +61,6 @@ const DefectoTable = ({search, reloadFlag, onRefresh}) =>{
     }
 
     const editDefecto = (data) => {
-        console.log(data)
         setDefecto(data);
         setIsModal(true)
         setModalEdit(true);

@@ -61,7 +61,6 @@ const RecuperadoTable = ({ search, reloadFlag, onRefresh }) =>{
     }
 
     const editRecuperado = (data) => {
-        console.log(data)
         setRecuperado(data);
         setIsModal(true)
         setModalEdit(true);

@@ -66,7 +66,6 @@ const ComponentesTable = ({search, onComponentListChange, reloadFlag, onRefresh 
     }
 
     const editComponente = (data) => {
-            console.log(data)
             setComponente(data);
             setIsModal(true)
             setModalEdit(true);

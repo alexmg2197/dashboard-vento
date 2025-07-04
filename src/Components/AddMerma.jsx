@@ -18,8 +18,6 @@ const AddMerma = () => {
 
     const { userData } = useUser() //Se usa para ver el usuario logueado
 
-    console.log(userData)
-
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
@@ -94,7 +92,7 @@ const AddMerma = () => {
                         piezas:'',
                         cargo:'',
                         disposicion:'',
-                        recuperado:'',
+                        recuperado:null,
                     }}
                     validate={values => {
                         const errors = {};
@@ -123,15 +121,16 @@ const AddMerma = () => {
                                     no_piezas: values.piezas,
                                     cargo: values.cargo,
                                     disposicion: values.disposicion,
-                                    recuperado_id: (!values.disposicion ? null : values.recuperado),
+                                    recuperado_id: values.recuperado,
                                     linea_id: userData?.linea_id,
                                     turno_id: userData?.turno_id,
                                     usuario_id: userData?.id_usuario
                                     },
                             ]);
-                            if(error){
+                            if(insertError){
+                                throw insertError;
                                 Swal.fire({
-                                    title: `Error ${error}`,
+                                    title: `Error ${insertError}`,
                                     icon: "error",
                                     draggable: true
                                 })
@@ -162,7 +161,7 @@ const AddMerma = () => {
                     <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
                         <div className="flex flex-col">
                             <label htmlFor="fecha">Fecha de merma:</label>
-                            <input type="date" id="fecha" min={new Date().toISOString().split("T")[0]} value={values.fecha} onChange={handleChange} className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150" />
+                            <input type="date" id="fecha" min={new Date().toLocaleDateString("en-CA")} value={values.fecha} onChange={handleChange} className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="modelo">Modelo:</label>

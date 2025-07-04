@@ -154,7 +154,7 @@ const filteredData = useMemo(() => {
                         <TableCell>{item.no_piezas}</TableCell>
                         <TableCell>{item.cargo}</TableCell>
                         <TableCell>{item.disposicion}</TableCell>
-                        <TableCell>{((item.Recuperado.recuperado === '' || item.Recuperado.recuperado === null || item.Recuperado.recuperado === undefined) ? 'N/A' : item.Recuperado.recuperado)}</TableCell>
+                        <TableCell>{(item.Recuperado === null  ? 'N/A' : item.Recuperado.recuperado)}</TableCell>
                         </TableRow>
                     ))}
                     {paginatedData.length === 0 && (
