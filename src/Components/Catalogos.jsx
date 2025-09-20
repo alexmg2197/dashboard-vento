@@ -10,7 +10,7 @@ import DefectoTable from "./Tablas/DefectoTable";
 import RecuperadoTable from "./Tablas/RecuperadoTable";
 import { useUser } from '../context/UserContext' //importado para mostrar informacion del usuario logueado
 import { useNavigate } from "react-router-dom";
-
+import LogoS from '../assets/logo-vento.png'
 const Catalogos = () =>{
 
     const [selectedTab, setSelectedTab] = useState(0);
